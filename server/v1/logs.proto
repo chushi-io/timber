@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package server.v1;
+
+option go_package = "github.com/chushi-io/timber/gen/server/v1;serverv1";
+
+message StreamLogsRequest {
+  string resource = 1;
+  bytes logs = 2;
+}
+
+message StreamLogsResponse { }
+
+service LogsService {
+  rpc Forward(stream StreamLogsRequest) returns (StreamLogsResponse);
+}
