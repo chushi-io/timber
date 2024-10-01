@@ -24,6 +24,7 @@ var rootCmd = &cobra.Command{
 func init() {
 	rootCmd.Flags().String("address", ":8080", "Address to bind to")
 	rootCmd.Flags().String("log-dir", "/timber/data", "Directory to store logs in")
+	rootCmd.Flags().Bool("debug", false, "Enable debug logging")
 	logger, _ = zap.NewProduction()
 }
 
@@ -43,7 +44,11 @@ func runServer(cmd *cobra.Command, args []string) {
 
 	address, _ := cmd.Flags().GetString("address")
 	logDir, _ := cmd.Flags().GetString("log-dir")
-	srv := server.New(logDir)
+	debug, _ := cmd.Flags().GetBool("debug")
+	if debug {
+		logger, _ = zap.NewDevelopment()
+	}
+	srv := server.New(logDir, logger)
 	mux := http.NewServeMux()
 	path, handler := serverv1connect.NewLogsServiceHandler(srv)
 	mux.Handle(path, handler)
@@ -51,6 +56,7 @@ func runServer(cmd *cobra.Command, args []string) {
 		res.Write([]byte("OK"))
 	})
 
+	logger.Info("Starting server")
 	http.ListenAndServe(
 		address,
 		// Use h2c so we can serve HTTP/2 without TLS.
