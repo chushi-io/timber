@@ -2,6 +2,7 @@ package main
 
 import (
 	"connectrpc.com/connect"
+	"errors"
 	"github.com/chushi-io/timber/gen/server/v1/serverv1connect"
 	"github.com/chushi-io/timber/interceptor"
 	"github.com/chushi-io/timber/internal/server"
@@ -11,6 +12,8 @@ import (
 	"golang.org/x/net/http2/h2c"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 )
 
 var (
@@ -60,6 +63,39 @@ func runServer(cmd *cobra.Command, args []string) {
 	mux.Handle(path, handler)
 	mux.HandleFunc("/ping", func(res http.ResponseWriter, req *http.Request) {
 		res.Write([]byte("OK"))
+	})
+
+	mux.HandleFunc("GET /files/{file}", func(writer http.ResponseWriter, request *http.Request) {
+		file := request.PathValue("file")
+		filePath := filepath.Join(logDir, file)
+		if _, err := os.Stat(filePath); errors.Is(err, os.ErrNotExist) {
+			writer.WriteHeader(http.StatusNotFound)
+			return
+		}
+
+		// optionally, filter file contents
+		contents, err := os.ReadFile(filePath)
+		if err != nil {
+			writer.WriteHeader(http.StatusNotFound)
+			return
+		}
+		writer.Write(contents)
+	})
+
+	mux.HandleFunc("DELETE /files/{file}", func(writer http.ResponseWriter, request *http.Request) {
+		file := request.PathValue("file")
+		filePath := filepath.Join(logDir, file)
+		if _, err := os.Stat(filePath); errors.Is(err, os.ErrNotExist) {
+			// path/to/whatever does not exist
+			writer.WriteHeader(http.StatusNotFound)
+			return
+		}
+
+		if err := os.Remove(filePath); err != nil {
+			writer.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		writer.WriteHeader(http.StatusOK)
 	})
 
 	logger.Info("Starting server")
