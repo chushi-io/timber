@@ -1,7 +1,9 @@
 package main
 
 import (
+	"connectrpc.com/connect"
 	"github.com/chushi-io/timber/gen/server/v1/serverv1connect"
+	"github.com/chushi-io/timber/interceptor"
 	"github.com/chushi-io/timber/internal/server"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
@@ -50,7 +52,11 @@ func runServer(cmd *cobra.Command, args []string) {
 	}
 	srv := server.New(logDir, logger)
 	mux := http.NewServeMux()
-	path, handler := serverv1connect.NewLogsServiceHandler(srv)
+	interceptors := connect.WithInterceptors(interceptor.NewServerAuthInterceptor())
+	path, handler := serverv1connect.NewLogsServiceHandler(
+		srv,
+		interceptors,
+	)
 	mux.Handle(path, handler)
 	mux.HandleFunc("/ping", func(res http.ResponseWriter, req *http.Request) {
 		res.Write([]byte("OK"))

@@ -19,7 +19,7 @@ func New(logDirectory string, logger *zap.Logger) *LogService {
 }
 
 func (l *LogService) Forward(ctx context.Context, stream *connect.ClientStream[v1.StreamLogsRequest]) (*connect.Response[v1.StreamLogsResponse], error) {
-	l.logger.Debug("forward request received", zap.String("resource", stream.Msg().Resource))
+	l.logger.Debug("opening write stream")
 	var logFile *os.File
 	var err error
 
@@ -32,12 +32,13 @@ func (l *LogService) Forward(ctx context.Context, stream *connect.ClientStream[v
 	for stream.Receive() {
 		l.logger.Debug("received log stream", zap.String("resource", stream.Msg().Resource))
 		if logFile == nil {
-			l.logger.Debug("opening file", zap.String("log", logFile.Name()))
-			logFile, err = os.OpenFile(filepath.Join(l.logDirectory, stream.Msg().Resource), os.O_CREATE|os.O_APPEND, 0644)
+			logFileName := filepath.Join(l.logDirectory, stream.Msg().Resource)
+			logFile, err = os.OpenFile(logFileName, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 			if err != nil {
-				l.logger.Error("failed opening file", zap.Error(err), zap.String("log", logFile.Name()))
+				l.logger.Error("failed opening file", zap.Error(err), zap.String("log", logFileName))
 				return nil, connect.NewError(connect.CodeUnknown, err)
 			}
+			l.logger.Debug("opened file", zap.String("log", logFile.Name()))
 		}
 
 		if _, err = logFile.WriteString(string(stream.Msg().Logs)); err != nil {
