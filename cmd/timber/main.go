@@ -23,6 +23,7 @@ var rootCmd = &cobra.Command{
 
 func init() {
 	rootCmd.Flags().String("address", ":8080", "Address to bind to")
+	rootCmd.Flags().String("log-dir", "/timber/data", "Directory to store logs in")
 	logger, _ = zap.NewProduction()
 }
 
@@ -41,7 +42,8 @@ func runServer(cmd *cobra.Command, args []string) {
 	//defer conn.Close(context.Background())
 
 	address, _ := cmd.Flags().GetString("address")
-	srv := server.New()
+	logDir, _ := cmd.Flags().GetString("log-dir")
+	srv := server.New(logDir)
 	mux := http.NewServeMux()
 	path, handler := serverv1connect.NewLogsServiceHandler(srv)
 	mux.Handle(path, handler)

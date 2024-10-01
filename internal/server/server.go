@@ -6,13 +6,15 @@ import (
 	v1 "github.com/chushi-io/timber/gen/server/v1"
 	"log"
 	"os"
+	"path/filepath"
 )
 
 type LogService struct {
+	logDirectory string
 }
 
-func New() *LogService {
-	return &LogService{}
+func New(logDirectory string) *LogService {
+	return &LogService{logDirectory}
 }
 
 func (l *LogService) Forward(ctx context.Context, stream *connect.ClientStream[v1.StreamLogsRequest]) (*connect.Response[v1.StreamLogsResponse], error) {
@@ -27,7 +29,7 @@ func (l *LogService) Forward(ctx context.Context, stream *connect.ClientStream[v
 	}()
 	for stream.Receive() {
 		if logFile == nil {
-			logFile, err = os.OpenFile(stream.Msg().Resource, os.O_CREATE|os.O_APPEND, 0644)
+			logFile, err = os.OpenFile(filepath.Join(l.logDirectory, stream.Msg().Resource), os.O_CREATE|os.O_APPEND, 0644)
 			if err != nil {
 				return nil, connect.NewError(connect.CodeUnknown, err)
 			}

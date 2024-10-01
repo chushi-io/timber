@@ -1,11 +1,11 @@
 FROM golang:1.23
 
-WORKDIR /app
+WORKDIR /timber
 
 COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . ./
-RUN CGO_ENABLED=0 GOOS=linux go build -o /timber cmd/timber/*.go
+RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/timber cmd/timber/*.go
 
-ENTRYPOINT ["/timber"]
+ENTRYPOINT ["/bin/timber"]
