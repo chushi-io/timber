@@ -38,3 +38,8 @@ func (a *Adapter) Write(p []byte) (int, error) {
 	}
 	return len(p), nil
 }
+
+func (a *Adapter) Flush() error {
+	_, err := a.stream.CloseAndReceive()
+	return err
+}
