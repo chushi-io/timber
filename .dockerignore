@@ -1,0 +1,6 @@
+.github
+.env
+.gitignore
+buf.gen.yaml
+buf.yaml
+Dockerfile
