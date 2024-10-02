@@ -27,6 +27,7 @@ func New(address string, authToken string, resource string) io.Writer {
 			address,
 			interceptors,
 		),
+		source: resource,
 	}
 }
 
