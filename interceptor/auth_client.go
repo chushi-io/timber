@@ -34,8 +34,8 @@ func (i *ClientAuthInterceptor) WrapStreamingClient(next connect.StreamingClient
 		spec connect.Spec,
 	) connect.StreamingClientConn {
 		conn := next(ctx, spec)
-		fmt.Println("Setting our token header")
 		conn.RequestHeader().Set(tokenHeader, fmt.Sprintf("Bearer %s", i.token))
+		fmt.Println("Setting our token header")
 		return conn
 	})
 }

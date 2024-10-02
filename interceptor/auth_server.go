@@ -25,12 +25,15 @@ func (i *ServerAuthInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryF
 		ctx context.Context,
 		req connect.AnyRequest,
 	) (connect.AnyResponse, error) {
-		if req.Header().Get(tokenHeader) == "" {
+		authHeader := req.Header().Get(tokenHeader)
+		if authHeader == "" {
 			fmt.Println(errNoToken.Error())
 			return nil, connect.NewError(connect.CodeUnauthenticated, errNoToken)
 		}
 
-		chunks := strings.Split(req.Header().Get(tokenHeader), " ")
+		fmt.Println(authHeader)
+
+		chunks := strings.Split(authHeader, " ")
 		if len(chunks) != 2 {
 			fmt.Println(errInvalidToken.Error())
 			return nil, connect.NewError(connect.CodeUnauthenticated, errInvalidToken)
@@ -58,12 +61,14 @@ func (i *ServerAuthInterceptor) WrapStreamingHandler(next connect.StreamingHandl
 		ctx context.Context,
 		conn connect.StreamingHandlerConn,
 	) error {
-		if conn.RequestHeader().Get(tokenHeader) == "" {
+		authHeader := conn.RequestHeader().Get(tokenHeader)
+		if authHeader == "" {
 			fmt.Println(errNoToken.Error())
 			return connect.NewError(connect.CodeUnauthenticated, errNoToken)
 		}
 
-		chunks := strings.Split(conn.RequestHeader().Get(tokenHeader), " ")
+		fmt.Println(authHeader)
+		chunks := strings.Split(authHeader, " ")
 		if len(chunks) != 2 {
 			fmt.Println(errInvalidToken.Error())
 			return connect.NewError(connect.CodeUnauthenticated, errInvalidToken)
