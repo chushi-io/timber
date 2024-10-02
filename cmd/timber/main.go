@@ -3,7 +3,6 @@ package main
 import (
 	"connectrpc.com/connect"
 	"errors"
-	"fmt"
 	"github.com/chushi-io/timber/gen/server/v1/serverv1connect"
 	"github.com/chushi-io/timber/interceptor"
 	"github.com/chushi-io/timber/internal/server"
@@ -41,7 +40,6 @@ func main() {
 }
 func logMw(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println(r.URL.Path)
 		next.ServeHTTP(w, r)
 	})
 }
@@ -67,7 +65,6 @@ func runServer(cmd *cobra.Command, args []string) {
 		srv,
 		interceptors,
 	)
-	fmt.Println(path)
 
 	mux.Handle(path, logMw(handler))
 

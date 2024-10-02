@@ -4,7 +4,6 @@ import (
 	"connectrpc.com/connect"
 	"context"
 	"errors"
-	"fmt"
 	"strings"
 )
 
@@ -27,20 +26,15 @@ func (i *ServerAuthInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryF
 	) (connect.AnyResponse, error) {
 		authHeader := req.Header().Get(tokenHeader)
 		if authHeader == "" {
-			fmt.Println(errNoToken.Error())
 			return nil, connect.NewError(connect.CodeUnauthenticated, errNoToken)
 		}
 
-		fmt.Println(authHeader)
-
 		chunks := strings.Split(authHeader, " ")
 		if len(chunks) != 2 {
-			fmt.Println(errInvalidToken.Error())
 			return nil, connect.NewError(connect.CodeUnauthenticated, errInvalidToken)
 		}
 
 		// TODO: We need to actually verify the tokens
-		fmt.Println("Authenticated request")
 		return next(ctx, req)
 	})
 }
@@ -63,19 +57,15 @@ func (i *ServerAuthInterceptor) WrapStreamingHandler(next connect.StreamingHandl
 	) error {
 		authHeader := conn.RequestHeader().Get(tokenHeader)
 		if authHeader == "" {
-			fmt.Println(errNoToken.Error())
 			return connect.NewError(connect.CodeUnauthenticated, errNoToken)
 		}
 
-		fmt.Println(authHeader)
 		chunks := strings.Split(authHeader, " ")
 		if len(chunks) != 2 {
-			fmt.Println(errInvalidToken.Error())
 			return connect.NewError(connect.CodeUnauthenticated, errInvalidToken)
 		}
 
 		// TODO: We actually need to validate the token
-		fmt.Println("authenticated request")
 		return next(ctx, conn)
 	})
 }
