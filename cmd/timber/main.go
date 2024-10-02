@@ -115,6 +115,7 @@ func runServer(cmd *cobra.Command, args []string) {
 			_, err = logFile.Read(out)
 			if err != nil {
 				fmt.Println("Failed reading requested bytes")
+				fmt.Println(err)
 				writer.WriteHeader(http.StatusNoContent)
 				return
 			}
