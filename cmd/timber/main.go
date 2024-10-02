@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"connectrpc.com/connect"
 	"errors"
+	"fmt"
 	"github.com/chushi-io/timber/gen/server/v1/serverv1connect"
 	"github.com/chushi-io/timber/interceptor"
 	"github.com/chushi-io/timber/internal/server"
@@ -78,12 +79,14 @@ func runServer(cmd *cobra.Command, args []string) {
 		file := request.PathValue("file")
 		filePath := filepath.Join(logDir, file)
 		if _, err := os.Stat(filePath); errors.Is(err, os.ErrNotExist) {
-			writer.WriteHeader(http.StatusNotFound)
+			fmt.Println("File doesnt exist")
+			writer.WriteHeader(http.StatusNoContent)
 			return
 		}
 
 		logFile, err := os.OpenFile(filePath, os.O_RDONLY, 0600)
 		if err != nil {
+			fmt.Println("Failed opening file")
 			writer.WriteHeader(http.StatusNoContent)
 			return
 		}
@@ -93,7 +96,8 @@ func runServer(cmd *cobra.Command, args []string) {
 			var buffer bytes.Buffer
 			io.Copy(&buffer, logFile)
 			if err != nil {
-				writer.WriteHeader(http.StatusNotFound)
+				fmt.Println("Failed copying buffer")
+				writer.WriteHeader(http.StatusNoContent)
 				return
 			}
 			writer.Write(buffer.Bytes())
@@ -102,12 +106,14 @@ func runServer(cmd *cobra.Command, args []string) {
 			intOffset, _ := strconv.Atoi(offset)
 			_, err = logFile.Seek(int64(intOffset), 0)
 			if err != nil {
+				fmt.Println("Failed seeking file")
 				writer.WriteHeader(http.StatusNoContent)
 				return
 			}
 			out := make([]byte, intLimit)
 			_, err = logFile.Read(out)
 			if err != nil {
+				fmt.Println("Failed reading requested bytes")
 				writer.WriteHeader(http.StatusNoContent)
 				return
 			}
