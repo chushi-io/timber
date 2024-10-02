@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"connectrpc.com/connect"
 	"errors"
 	"github.com/chushi-io/timber/gen/server/v1/serverv1connect"
@@ -10,10 +11,12 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
+	"io"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 )
 
 var (
@@ -69,6 +72,9 @@ func runServer(cmd *cobra.Command, args []string) {
 	mux.Handle(path, logMw(handler))
 
 	mux.HandleFunc("GET /files/{file}", func(writer http.ResponseWriter, request *http.Request) {
+		limit := request.URL.Query().Get("limit")
+		offset := request.URL.Query().Get("offset")
+
 		file := request.PathValue("file")
 		filePath := filepath.Join(logDir, file)
 		if _, err := os.Stat(filePath); errors.Is(err, os.ErrNotExist) {
@@ -76,13 +82,37 @@ func runServer(cmd *cobra.Command, args []string) {
 			return
 		}
 
-		// optionally, filter file contents
-		contents, err := os.ReadFile(filePath)
+		logFile, err := os.OpenFile(filePath, os.O_RDONLY, 0600)
 		if err != nil {
-			writer.WriteHeader(http.StatusNotFound)
+			writer.WriteHeader(http.StatusNoContent)
 			return
 		}
-		writer.Write(contents)
+
+		// optionally, filter file contents
+		if limit == "" && offset == "" {
+			var buffer bytes.Buffer
+			io.Copy(&buffer, logFile)
+			if err != nil {
+				writer.WriteHeader(http.StatusNotFound)
+				return
+			}
+			writer.Write(buffer.Bytes())
+		} else {
+			intLimit, _ := strconv.Atoi(limit)
+			intOffset, _ := strconv.Atoi(offset)
+			_, err = logFile.Seek(int64(intOffset), 0)
+			if err != nil {
+				writer.WriteHeader(http.StatusNoContent)
+				return
+			}
+			out := make([]byte, intLimit)
+			_, err = logFile.Read(out)
+			if err != nil {
+				writer.WriteHeader(http.StatusNoContent)
+				return
+			}
+			writer.Write(out)
+		}
 	})
 
 	mux.HandleFunc("DELETE /files/{file}", func(writer http.ResponseWriter, request *http.Request) {
