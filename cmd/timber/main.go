@@ -79,7 +79,8 @@ func runServer(cmd *cobra.Command, args []string) {
 		file := request.PathValue("file")
 		fmt.Printf("Checking file %s\n", file)
 		filePath := filepath.Join(logDir, file)
-		if _, err := os.Stat(filePath); errors.Is(err, os.ErrNotExist) {
+		finfo, err := os.Stat(filePath)
+		if err != nil && errors.Is(err, os.ErrNotExist) {
 			fmt.Println("File doesnt exist")
 			writer.WriteHeader(http.StatusNoContent)
 			return
@@ -105,11 +106,19 @@ func runServer(cmd *cobra.Command, args []string) {
 		} else {
 			intLimit, _ := strconv.Atoi(limit)
 			intOffset, _ := strconv.Atoi(offset)
+			fmt.Println(intLimit)
+			fmt.Println(intOffset)
+
 			_, err = logFile.Seek(int64(intOffset), 0)
 			if err != nil {
 				fmt.Println("Failed seeking file")
 				writer.WriteHeader(http.StatusNoContent)
 				return
+			}
+			// We need to check the length of the file. If we don't have enough bytes,
+			// simply read to the EOF
+			if (int64(intOffset + intLimit)) > finfo.Size() {
+				intLimit = int(finfo.Size()) - intOffset
 			}
 			out := make([]byte, intLimit)
 			_, err = logFile.Read(out)
