@@ -39,6 +39,12 @@ func main() {
 		log.Fatal(err)
 	}
 }
+func logMw(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println(r.URL.Path)
+		next.ServeHTTP(w, r)
+	})
+}
 
 func runServer(cmd *cobra.Command, args []string) {
 	//conn, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"))
@@ -62,6 +68,7 @@ func runServer(cmd *cobra.Command, args []string) {
 		interceptors,
 	)
 	fmt.Println(path)
+
 	mux.Handle(path, handler)
 	mux.HandleFunc("/ping", func(res http.ResponseWriter, req *http.Request) {
 		res.Write([]byte("OK"))
