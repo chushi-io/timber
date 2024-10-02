@@ -69,10 +69,7 @@ func runServer(cmd *cobra.Command, args []string) {
 	)
 	fmt.Println(path)
 
-	mux.Handle(path, handler)
-	mux.HandleFunc("/ping", func(res http.ResponseWriter, req *http.Request) {
-		res.Write([]byte("OK"))
-	})
+	mux.Handle(path, logMw(handler))
 
 	mux.HandleFunc("GET /files/{file}", func(writer http.ResponseWriter, request *http.Request) {
 		file := request.PathValue("file")
