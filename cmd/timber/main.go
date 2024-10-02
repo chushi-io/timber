@@ -3,6 +3,7 @@ package main
 import (
 	"connectrpc.com/connect"
 	"errors"
+	"fmt"
 	"github.com/chushi-io/timber/gen/server/v1/serverv1connect"
 	"github.com/chushi-io/timber/interceptor"
 	"github.com/chushi-io/timber/internal/server"
@@ -60,6 +61,7 @@ func runServer(cmd *cobra.Command, args []string) {
 		srv,
 		interceptors,
 	)
+	fmt.Println(path)
 	mux.Handle(path, handler)
 	mux.HandleFunc("/ping", func(res http.ResponseWriter, req *http.Request) {
 		res.Write([]byte("OK"))

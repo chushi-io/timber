@@ -31,6 +31,7 @@ func New(address string, authToken string, resource string) io.Writer {
 	}
 }
 
+// TODO: Plugin OIDC with server to authenticate to resources
 func (a *Adapter) Write(p []byte) (int, error) {
 	if a.stream == nil {
 		fmt.Println("opening stream")
