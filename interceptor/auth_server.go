@@ -59,15 +59,18 @@ func (i *ServerAuthInterceptor) WrapStreamingHandler(next connect.StreamingHandl
 		conn connect.StreamingHandlerConn,
 	) error {
 		if conn.RequestHeader().Get(tokenHeader) == "" {
+			fmt.Println(errNoToken.Error())
 			return connect.NewError(connect.CodeUnauthenticated, errNoToken)
 		}
 
 		chunks := strings.Split(conn.RequestHeader().Get(tokenHeader), " ")
 		if len(chunks) != 2 {
+			fmt.Println(errInvalidToken.Error())
 			return connect.NewError(connect.CodeUnauthenticated, errInvalidToken)
 		}
 
 		// TODO: We actually need to validate the token
+		fmt.Println("authenticated request")
 		return next(ctx, conn)
 	})
 }

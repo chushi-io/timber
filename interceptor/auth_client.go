@@ -22,6 +22,7 @@ func (i *ClientAuthInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryF
 		ctx context.Context,
 		req connect.AnyRequest,
 	) (connect.AnyResponse, error) {
+		fmt.Println("Setting unary request header")
 		req.Header().Set(tokenHeader, fmt.Sprintf("Bearer %s", i.token))
 		return next(ctx, req)
 	})
@@ -33,6 +34,7 @@ func (i *ClientAuthInterceptor) WrapStreamingClient(next connect.StreamingClient
 		spec connect.Spec,
 	) connect.StreamingClientConn {
 		conn := next(ctx, spec)
+		fmt.Println("Setting our token header")
 		conn.RequestHeader().Set(tokenHeader, fmt.Sprintf("Bearer %s", i.token))
 		return conn
 	})
