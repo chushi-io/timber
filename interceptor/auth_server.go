@@ -4,6 +4,7 @@ import (
 	"connectrpc.com/connect"
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -25,15 +26,18 @@ func (i *ServerAuthInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryF
 		req connect.AnyRequest,
 	) (connect.AnyResponse, error) {
 		if req.Header().Get(tokenHeader) == "" {
+			fmt.Println(errNoToken.Error())
 			return nil, connect.NewError(connect.CodeUnauthenticated, errNoToken)
 		}
 
 		chunks := strings.Split(req.Header().Get(tokenHeader), " ")
 		if len(chunks) != 2 {
+			fmt.Println(errInvalidToken.Error())
 			return nil, connect.NewError(connect.CodeUnauthenticated, errInvalidToken)
 		}
 
 		// TODO: We need to actually verify the tokens
+		fmt.Println("Authenticated request")
 		return next(ctx, req)
 	})
 }
