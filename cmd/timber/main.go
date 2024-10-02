@@ -77,6 +77,7 @@ func runServer(cmd *cobra.Command, args []string) {
 		offset := request.URL.Query().Get("offset")
 
 		file := request.PathValue("file")
+		fmt.Printf("Checking file %s\n", file)
 		filePath := filepath.Join(logDir, file)
 		if _, err := os.Stat(filePath); errors.Is(err, os.ErrNotExist) {
 			fmt.Println("File doesnt exist")
